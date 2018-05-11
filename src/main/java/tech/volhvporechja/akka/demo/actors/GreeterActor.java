@@ -36,6 +36,7 @@ public class GreeterActor extends AbstractActor {
 					log.info(String.format("GREETER-%s: Received data [%s]", id, wtg.getWho()));
 					printer.route(new GreetingMessage(String.format(messageTemplate, wtg.getWho())), getSelf());
 				})
+				.matchAny(o -> log.info("received unknown message"))
 				.build();
 	}
 }

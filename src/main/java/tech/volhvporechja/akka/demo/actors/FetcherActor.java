@@ -34,7 +34,7 @@ public class FetcherActor extends AbstractActor {
 	private void intializePrinterSystem(FetcherInitMessage config) {
 		List<Routee> printerRoutees = new ArrayList<>();
 		for (int i = 0; i < config.getPrintersCount(); i++) {
-			ActorRef printer = getContext().actorOf(Props.create(PrinterActor.class, i));
+			ActorRef printer = getContext().actorOf(PrinterActor.props(i), "printer-" + i);
 			getContext().watch(printer);
 			printerRoutees.add(new ActorRefRoutee(printer));
 		}
@@ -43,7 +43,7 @@ public class FetcherActor extends AbstractActor {
 
 		List<Routee> greeterRoutees = new ArrayList<>();
 		for (int i = 0; i < config.getGreetersCount(); i++) {
-			ActorRef greeter = getContext().actorOf(Props.create(GreeterActor.class, "Aloha, %s!!", printerRouter, i));
+			ActorRef greeter = getContext().actorOf(GreeterActor.props("Aloha, %s!!", printerRouter, i), "greeter-" + i);
 			getContext().watch(greeter);
 			greeterRoutees.add(new ActorRefRoutee(greeter));
 		}
@@ -78,10 +78,10 @@ public class FetcherActor extends AbstractActor {
 					String message = new String(body, "UTF-8");
 					log.info(" [x] Received '" + message + "'");
 
-					IncommingMessage request = null;
+					IncomingMessage request = null;
 					try {
 						ObjectMapper mapper = new ObjectMapper();
-						request = mapper.readValue(message, IncommingMessage.class);
+						request = mapper.readValue(message, IncomingMessage.class);
 					} catch (Exception ex) {
 						log.error(ex, "Unable to parse request.");
 					}
@@ -108,6 +108,7 @@ public class FetcherActor extends AbstractActor {
 		return receiveBuilder()
 				.match(FetchStartMessage.class, this::listen)
 				.match(FetcherInitMessage.class, this::intializePrinterSystem)
+				.matchAny(o -> log.info("received unknown message"))
 				.build();
 	}
 }

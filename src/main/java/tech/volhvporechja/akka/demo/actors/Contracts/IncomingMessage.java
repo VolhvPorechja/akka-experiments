@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class IncommingMessage {
+public class IncomingMessage {
 	private String type;
 	private String load;
 }
