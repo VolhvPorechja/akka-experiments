@@ -22,16 +22,19 @@ public class FetcherActor extends AbstractActor {
 	private Router broadcastRouter;
 	private Router router;
 
+	// Blueprint нашего аткора, то как его следует инстанцировать
 	static public Props props() {
 		return Props.create(FetcherActor.class, FetcherActor::new);
 	}
 
 	/**
-	 * Processor for actors system initialization
+	 * Логика инициалиазции нашей системы
+	 * Передаем сообщение в котором храниться конфигурация нашей системы
 	 *
 	 * @param config initialization config
 	 */
-	private void intializePrinterSystem(FetcherInitMessage config) {
+	private void initializePrinterSystem(FetcherInitMessage config) {
+		// готовим наши "принтеры"
 		List<Routee> printerRoutees = new ArrayList<>();
 		for (int i = 0; i < config.getPrintersCount(); i++) {
 			ActorRef printer = getContext().actorOf(PrinterActor.props(i), "printer-" + i);
@@ -39,8 +42,8 @@ public class FetcherActor extends AbstractActor {
 			printerRoutees.add(new ActorRefRoutee(printer));
 		}
 
+		// готовим наши шаблонизаторы
 		Router printerRouter = new Router(new RoundRobinRoutingLogic(), printerRoutees);
-
 		List<Routee> greeterRoutees = new ArrayList<>();
 		for (int i = 0; i < config.getGreetersCount(); i++) {
 			ActorRef greeter = getContext().actorOf(GreeterActor.props("Aloha, %s!!", printerRouter, i), "greeter-" + i);
@@ -48,12 +51,18 @@ public class FetcherActor extends AbstractActor {
 			greeterRoutees.add(new ActorRefRoutee(greeter));
 		}
 
+		// Роутер для распространения конфигурационного сообщения
 		broadcastRouter = new Router(new BroadcastRoutingLogic(), greeterRoutees);
+
+		// Роутер для отправки сообщений предназначенных для шаблонизации и печати
 		router = new Router(new RoundRobinRoutingLogic(), greeterRoutees);
 	}
 
 	/**
-	 * Processor for listening for queue
+	 * Метод прослушивания очереди
+	 * !! Disclaimer: используется блокирующее API для доступа к RabbitMQ
+	 * поток, который будет исполнять этот код будет потерян для пула.
+	 * Но так как такой актор только один, для демонстрационных целей - ничего страшного
 	 *
 	 * @param config listening config
 	 */
@@ -78,18 +87,18 @@ public class FetcherActor extends AbstractActor {
 					String message = new String(body, "UTF-8");
 					log.info(" [x] Received '" + message + "'");
 
-					IncomingMessage request = null;
+					QueueIncomingMessage request = null;
 					try {
 						ObjectMapper mapper = new ObjectMapper();
-						request = mapper.readValue(message, IncomingMessage.class);
+						request = mapper.readValue(message, QueueIncomingMessage.class);
 					} catch (Exception ex) {
 						log.error(ex, "Unable to parse request.");
 					}
 
 					if (request != null)
-						if (request.getType().equals("welcome"))
+						if (request.getType().equals(MessagesTypes.WELCOME))
 							router.route(new WelcomeMessage(request.getLoad()), getSelf());
-						else if (request.getType().equals("config"))
+						else if (request.getType().equals(MessagesTypes.CONFIG))
 							broadcastRouter.route(new GreetingConfigMessage(request.getLoad()), getSelf());
 						else
 							log.warning("Unknown message type");
@@ -103,12 +112,13 @@ public class FetcherActor extends AbstractActor {
 		}
 	}
 
+	// Билдер нашего обраотчика сообщений
 	@Override
 	public Receive createReceive() {
 		return receiveBuilder()
-				.match(FetchStartMessage.class, this::listen)
-				.match(FetcherInitMessage.class, this::intializePrinterSystem)
-				.matchAny(o -> log.info("received unknown message"))
+				.match(FetchStartMessage.class, this::listen) // Обработчик сообщения начала процесса прослушивания заданий на печать
+				.match(FetcherInitMessage.class, this::initializePrinterSystem) // Обработчик сообщения инициализации системы
+				.matchAny(o -> log.info("received unknown message")) // Обработчик неизвестного сообщения
 				.build();
 	}
 }

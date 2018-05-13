@@ -31,10 +31,11 @@ public class PrinterActor extends AbstractActor {
 				})
 				.match(ReceiveTimeout.class, r -> {
 					log.info("Soooo boooring!!");
-					// Switch off
+					// Switch off - просто висячий код, который позволяет выключить таймер
+					// для этой адской машины скуки
 					// getContext().setReceiveTimeout(Duration.Undefined());
 				})
-				.matchAny(o -> log.info("received unknown message"))
+				.matchAny(o -> log.info("received unknown message")) // Обработчик неизвестного сообщения
 				.build();
 	}
 }

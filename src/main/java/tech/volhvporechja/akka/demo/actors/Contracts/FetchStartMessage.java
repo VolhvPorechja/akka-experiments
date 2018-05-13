@@ -4,6 +4,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 
+/**
+ * Сообщение говорящее о том, что пора зачинать поток заданий
+ * содержит все параметры, чтобы начать это делать.
+ */
 @Getter
 @AllArgsConstructor
 @Builder
