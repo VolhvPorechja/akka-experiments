@@ -30,7 +30,7 @@ public class PrinterActor extends AbstractActor {
 					log.info(String.format("PRINTER-%s: <<%s>>", id, wtg.getMessage()));
 				})
 				.match(ReceiveTimeout.class, r -> {
-					log.info("Soooo boooring!!");
+					// log.info("Soooo boooring!!");
 					// Switch off - просто висячий код, который позволяет выключить таймер
 					// для этой адской машины скуки
 					// getContext().setReceiveTimeout(Duration.Undefined());

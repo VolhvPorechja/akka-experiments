@@ -35,6 +35,7 @@ public class FetcherActor extends AbstractActor {
 	 */
 	private void initializePrinterSystem(FetcherInitMessage config) {
 		// готовим наши "принтеры"
+		log.info("Initialization start");
 		List<Routee> printerRoutees = new ArrayList<>();
 		for (int i = 0; i < config.getPrintersCount(); i++) {
 			ActorRef printer = getContext().actorOf(PrinterActor.props(i), "printer-" + i);
@@ -56,6 +57,7 @@ public class FetcherActor extends AbstractActor {
 
 		// Роутер для отправки сообщений предназначенных для шаблонизации и печати
 		router = new Router(new RoundRobinRoutingLogic(), greeterRoutees);
+		log.info("Initialization finished");
 	}
 
 	/**
@@ -105,8 +107,9 @@ public class FetcherActor extends AbstractActor {
 				}
 			};
 
-			log.info(String.format("Listening RabbitMq server=%s:%s queue=%s", config.getHost(), config.getPort(), config.getQueueName()));
 			channel.basicConsume(config.getQueueName(), true, consumer);
+			log.info(String.format("Listening RabbitMq server=%s:%s queue=%s", config.getHost(), config.getPort(), config.getQueueName()));
+
 		} catch (Exception ex) {
 			log.error(ex, "Error occurred during rabbitmq messages fetching");
 		}

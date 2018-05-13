@@ -8,9 +8,10 @@ import tech.volhvporechja.akka.demo.actors.Contracts.QueueIncomingMessage;
 import tech.volhvporechja.akka.demo.actors.config.RabbitMQConfig;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeoutException;
 
-public class MessagesPublisher {
+public class SuperMessagesPublisher {
 
 	private static String[] names = {"Alex", "Ben", "Carrol", "Diana", "Evan", "Martin Fawler"};
 
@@ -23,15 +24,17 @@ public class MessagesPublisher {
 		factory.setUsername(config.getUser());
 		factory.setPassword(config.getPass());
 
+		System.out.println(String.format("Started: %s", LocalDateTime.now()));
+
 		try (Connection conn = factory.newConnection()) {
 			try (Channel channel = conn.createChannel()) {
 				channel.queueDeclare(config.getQueue(), false, false, false, null);
 
 				QueueIncomingMessage.QueueIncomingMessageBuilder welcomeMessageBuilder = QueueIncomingMessage.builder().
 						type(MessagesTypes.WELCOME);
-				for (int i = 0; i < 5e6; i++) {
+				for (int i = 0; i < 1e6; i++) {
 					final byte[] message = welcomeMessageBuilder
-							.load(names[i % names.length])
+							.load(names[i % names.length] + "-" + i)
 							.build().marshall();
 
 					channel.basicPublish("", config.getQueue(), null, message);
@@ -43,14 +46,16 @@ public class MessagesPublisher {
 						.build().marshall();
 				channel.basicPublish("", config.getQueue(), null, reconfig);
 
-				for (int i = 0; i < 5e6; i++) {
+				for (int i = 0; i < 1e6; i++) {
 					final byte[] message = welcomeMessageBuilder
-							.load(names[i % names.length])
+							.load(names[i % names.length] + "-" + i)
 							.build().marshall();
 
 					channel.basicPublish("", config.getQueue(), null, message);
 				}
 			}
 		}
+
+		System.out.println(String.format("Finished: %s", LocalDateTime.now()));
 	}
 }

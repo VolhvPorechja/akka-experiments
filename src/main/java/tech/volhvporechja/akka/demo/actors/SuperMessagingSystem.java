@@ -20,8 +20,8 @@ public class SuperMessagingSystem {
 
 		// Подготавливаем сообщение, которое должно вызвать создание наше системы акторов
 		FetcherInitMessage fetcherInit = FetcherInitMessage.builder()
-				.greetersCount(10) // Количество шаблонизаторов
-				.printersCount(5)  // Количество принтеров
+				.greetersCount(20000) // Количество шаблонизаторов
+				.printersCount(20000) // Количество принтеров
 				.build();
 
 		// И отправляем это сообщение нашему Fetcher'у
@@ -32,11 +32,11 @@ public class SuperMessagingSystem {
 		// обработки заявок нашей системой
 		RabbitMQConfig config = RabbitMQConfig.Load("settings.yml");
 		FetchStartMessage configMessage = FetchStartMessage.builder()
-				.host(config.getHost()) // Хост, здесь настроено на Docker в Windows через DockerTools (https://docs.docker.com/toolbox/toolbox_install_windows/)
-				.port(config.getPort())             // Стандартный порт
-				.user(config.getUser())          // Стандартный пользователь
-				.password(config.getPass())      // Стандартный пароль
-				.queueName(config.getQueue())     // Очередь которую будет прослушивать наша система
+				.host(config.getHost())       // Хост, здесь настроено на Docker в Windows через DockerTools (https://docs.docker.com/toolbox/toolbox_install_windows/)
+				.port(config.getPort())       // Стандартный порт
+				.user(config.getUser())       // Стандартный пользователь
+				.password(config.getPass())   // Стандартный пароль
+				.queueName(config.getQueue()) // Очередь которую будет прослушивать наша система
 				.build();
 
 		// И отправляем это сообщение нашему Fetcher'у через путь, чтобы все закрутилось
